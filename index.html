@@ -294,8 +294,57 @@
     .search-wrap { margin-left: 0; width: 100%; }
     .search-input { width: 100%; max-width: none; }
   }
+  .book-btn { padding: 8px 14px; font-size: .9rem; }
+  .tool-btn.primary { background: var(--accent); color: #fff; }
+  .tool-btn.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+  .book-panel { background: var(--tint-3); border-bottom: 2px solid var(--line); padding: 14px 16px;
+    display: flex; gap: 14px 24px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .book-panel-main { min-width: 0; flex: 1 1 320px; }
+  .book-panel-title { font-weight: 800; font-size: 1.05rem; color: var(--accent-deep); }
+  .book-panel-meta { font-size: .88rem; color: var(--muted); margin-top: 2px; }
+  .book-steps { margin: 8px 0 0 20px; font-size: .9rem; line-height: 1.55; color: var(--ink); }
+  .book-panel-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  #printBook { display: none; }
+
   @media print {
     @page { margin: 18mm 16mm; }
+    /* Whole-grade book: print only the book */
+    body.book-mode > *:not(#printBook) { display: none !important; }
+    body.book-mode #printBook { display: block; }
+    #printBook { font-family: Georgia, 'Times New Roman', serif; color: #000; }
+    .bk-cover { min-height: 230mm; display: flex; flex-direction: column; justify-content: center; gap: 10pt; break-after: page; }
+    .bk-kicker { font: 800 9pt 'Nunito', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #c2410c;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .bk-cover h1 { font: 800 38pt/1.1 'Nunito', system-ui, sans-serif; }
+    .bk-cover .bk-sub { font: 700 18pt 'Nunito', system-ui, sans-serif; color: #333; }
+    .bk-cover .bk-meta { font: 600 11pt 'Nunito', system-ui, sans-serif; color: #555; }
+    .bk-cover .bk-how { margin-top: 18pt; max-width: 120mm; font: 400 11pt/1.5 'Nunito', system-ui, sans-serif; color: #333;
+      border-left: 2.5pt solid #f97316; padding-left: 10pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .bk-toc { break-after: page; }
+    .bk-toc h2 { font: 800 20pt 'Nunito', system-ui, sans-serif; margin-bottom: 10pt; }
+    .toc-cols { column-count: 2; column-gap: 9mm; font-family: 'Nunito', system-ui, sans-serif; }
+    .toc-unit { font-weight: 800; font-size: 10pt; text-transform: uppercase; letter-spacing: .06em; color: #c2410c;
+      margin: 10pt 0 3pt; break-after: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .toc-topic { font-weight: 800; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .06em; color: #666;
+      margin: 7pt 0 2pt; break-after: avoid; }
+    .toc-item { display: flex; gap: 6pt; font-size: 9.5pt; line-height: 1.35; padding: 1.5pt 0; color: #000;
+      text-decoration: none; break-inside: avoid; }
+    .toc-n { min-width: 16pt; text-align: right; font-weight: 800; color: #555; font-variant-numeric: tabular-nums; }
+    .toc-name { flex: 1; }
+    .toc-count { color: #777; font-size: 8pt; white-space: nowrap; }
+    .bk-lesson { break-before: page; }
+    .bk-lesson-head { border-bottom: 1pt solid #999; padding-bottom: 6pt; margin-bottom: 12pt; break-after: avoid; }
+    .bk-lesson-head h2 { font: 800 15pt/1.25 'Nunito', system-ui, sans-serif; margin-top: 3pt; }
+    .bk-n { color: #c2410c; margin-right: 4pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .bk-tags { font: 600 8.5pt 'Nunito', system-ui, sans-serif; color: #666; margin-top: 2pt; }
+    .bk-reading + .bk-reading { border-top: .75pt dashed #aaa; margin-top: 14pt; padding-top: 12pt; }
+    .bk-label { font: 800 8pt 'Nunito', system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #777;
+      margin-bottom: 5pt; break-after: avoid; }
+    .bk-instr { font-style: italic; font-size: 9.5pt; color: #444; margin-bottom: 6pt; break-after: avoid; }
+    .bk-title { font: 800 14pt/1.25 'Nunito', system-ui, sans-serif; break-after: avoid; }
+    .bk-author { font-style: italic; font-size: 10pt; color: #444; margin-top: 1pt; break-after: avoid; }
+    .bk-body { font-size: 12pt; line-height: 1.6; margin-top: 7pt; }
+    .bk-body p { margin-bottom: .55em; orphans: 3; widows: 3; }
     html, body { height: auto; background: #fff; color: #000; display: block; }
     header, .grade-bar, .sidebar, .tools, .clear-ask, .reader-empty, .mark-hint, .header-tags,
     .notes-panel, .mark-pop { display: none !important; }
@@ -342,11 +391,28 @@
 <div class="grade-bar">
   <span class="grade-bar-label">My Grade:</span>
   <span id="gradeBar" style="display:flex;gap:10px;flex-wrap:wrap;"></span>
+  <button type="button" class="tool-btn book-btn" id="bookBtn" onclick="openBookPanel()" hidden></button>
   <span class="search-wrap">
     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
     <input id="searchInput" class="search-input" type="search" autocomplete="off" placeholder="Search all stories…" oninput="onSearch(this.value)" aria-label="Search all stories">
     <button class="search-clear" id="searchClear" title="Clear search" onclick="clearSearch()" style="display:none">×</button>
   </span>
+</div>
+
+<div class="book-panel" id="bookPanel" role="dialog" aria-labelledby="bookPanelTitle" hidden>
+  <div class="book-panel-main">
+    <div class="book-panel-title" id="bookPanelTitle"></div>
+    <p class="book-panel-meta" id="bookPanelMeta"></p>
+    <ol class="book-steps">
+      <li>Click <b>Make PDF</b>. The print window opens.</li>
+      <li>Set <b>Destination</b> to <b>Save as PDF</b>, then click <b>Save</b>.</li>
+      <li>Keep <b>Headers and footers</b> on if you want page numbers.</li>
+    </ol>
+  </div>
+  <div class="book-panel-actions">
+    <button type="button" class="tool-btn primary" id="bookMake" onclick="makeBook()">Make PDF</button>
+    <button type="button" class="tool-btn" onclick="closeBookPanel()">Cancel</button>
+  </div>
 </div>
 
 <div class="layout">
@@ -360,6 +426,8 @@
   </div>
   <div class="reader" id="reader"></div>
 </div>
+
+<div id="printBook" aria-hidden="true"></div>
 
 <div class="mark-pop" id="markPop" role="toolbar" aria-label="Mark the text" hidden></div>
 
@@ -443,6 +511,9 @@ function renderGrades() {
     btn.onclick = () => selectGrade(g);
     bar.appendChild(btn);
   });
+  updateBookBtn();
+  const bp = document.getElementById('bookPanel');
+  if (bp && !bp.hidden) closeBookPanel();
 }
 
 function emptyReader(msg) {
@@ -683,6 +754,7 @@ const ICON = {
   ul: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3v7a6 6 0 0 0 12 0V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg>',
   cm: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
   x: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M15.5 4.5l4 4L9 19H5v-4z"/></svg>',
+  download: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>',
   print: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>'
 };
 
@@ -1156,6 +1228,121 @@ function selectLesson(flatIdx) {
 // Print the open story with its marks, and the notes listed underneath. The
 // page title becomes the story name first, so the browser's header and its
 // "Save as PDF" filename say which story it is.
+// ── Whole-grade PDF (a printable book of every reading in one grade) ────
+function bookLessons(track, grade) {
+  const lessons = [];
+  let cur = null;
+  itemsFor(track, grade).forEach(it => {
+    if (!it.raw) return;
+    if (!cur || cur.li !== it.li) {
+      cur = { li: it.li, n: parseInt(it.num, 10), lesson: it.lesson, readings: [] };
+      lessons.push(cur);
+    }
+    cur.readings.push(it);
+  });
+  return lessons;
+}
+function bookName(track, grade) { return `Grade ${grade} ${TRACK_LABEL[track]} Reading Texts`; }
+function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+
+function updateBookBtn() {
+  const btn = document.getElementById('bookBtn');
+  if (!btn) return;
+  btn.hidden = !CAN_PRINT || !currentGrade;
+  btn.innerHTML = `${ICON.download}Grade ${esc(currentGrade || '')} PDF`;
+  btn.title = `Make a PDF of every ${TRACK_LABEL[currentTrack].toLowerCase()} reading in Grade ${currentGrade}`;
+}
+function openBookPanel() {
+  const lessons = bookLessons(currentTrack, currentGrade);
+  const readings = lessons.reduce((a, l) => a + l.readings.length, 0);
+  document.getElementById('bookPanelTitle').textContent = `Make a PDF: ${bookName(currentTrack, currentGrade)}`;
+  document.getElementById('bookPanelMeta').textContent =
+    `${plural(lessons.length, 'lesson', 'lessons')} and ${plural(readings, 'reading', 'readings')}, each lesson starting on a new page.`;
+  document.getElementById('bookPanel').hidden = false;
+  document.getElementById('bookMake').focus();
+}
+function closeBookPanel() { document.getElementById('bookPanel').hidden = true; }
+
+function bookReadingHTML(r) {
+  const { title, author, body, instruction } = parseText(r.raw);
+  const paras = body.split('\n').map(l => l.trim()).filter(Boolean);
+  return `<div class="bk-reading">
+    <div class="bk-label">${r.ab ? 'Reading ' + esc(r.num) : 'Reading'}</div>
+    ${instruction ? `<div class="bk-instr">${esc(instruction)}</div>` : ''}
+    ${title ? `<div class="bk-title">${esc(title)}</div>` : ''}
+    ${author ? `<div class="bk-author">${esc(author)}</div>` : ''}
+    <div class="bk-body">${paras.map(p => `<p>${esc(p)}</p>`).join('')}</div>
+  </div>`;
+}
+
+function buildBook(track, grade) {
+  const lessons = bookLessons(track, grade);
+  const readings = lessons.reduce((a, l) => a + l.readings.length, 0);
+  const showUnits = track === 'hf';
+  let toc = '', lastUnit = null, lastTopic = null;
+  lessons.forEach(L => {
+    const l = L.lesson;
+    const unitKey = (l.module || '') + '|' + l.unit;
+    if (showUnits && unitKey !== lastUnit) { toc += `<div class="toc-unit">${l.module ? esc(l.module) + ': ' : ''}${esc(l.unit)}</div>`; lastUnit = unitKey; lastTopic = null; }
+    if (l.topic !== lastTopic) { toc += `<div class="toc-topic">${esc(l.topic)}</div>`; lastTopic = l.topic; }
+    toc += `<a class="toc-item" href="#bk-${L.n}"><span class="toc-n">${L.n}</span><span class="toc-name">${esc(l.lesson)}</span>`
+         + `<span class="toc-count">${plural(L.readings.length, 'reading', 'readings')}</span></a>`;
+  });
+  const how = track === 'hf'
+    ? 'Find your lesson in the Contents. The lesson names match the lessons in your Timeback course. Each lesson starts on a new page.'
+    : 'Find your lesson in the Contents. Each lesson starts on a new page.';
+  let html = `<section class="bk-cover">
+      <div class="bk-kicker">Reading Time</div>
+      <h1>Grade ${esc(grade)} Reading Texts</h1>
+      <div class="bk-sub">${esc(TRACK_LABEL[track])} lessons</div>
+      <div class="bk-meta">${plural(lessons.length, 'lesson', 'lessons')} · ${plural(readings, 'reading', 'readings')}</div>
+      <div class="bk-how">${how}</div>
+    </section>
+    <section class="bk-toc"><h2>Contents</h2><div class="toc-cols">${toc}</div></section>`;
+  lessons.forEach(L => {
+    const l = L.lesson;
+    html += `<section class="bk-lesson" id="bk-${L.n}">
+      <div class="bk-lesson-head">
+        <div class="bk-kicker">${esc(l.unit && l.unit !== l.topic && showUnits ? l.unit + ' · ' + l.topic : l.topic)}</div>
+        <h2><span class="bk-n">Lesson ${L.n}</span>${esc(l.lesson)}</h2>
+        <div class="bk-tags">Grade ${esc(grade)} · ${esc(TRACK_LABEL[track])}${l.module ? ' · ' + esc(l.module) : ''}</div>
+      </div>
+      ${L.readings.map(bookReadingHTML).join('')}
+    </section>`;
+  });
+  return html;
+}
+
+function makeBook() {
+  const btn = document.getElementById('bookMake');
+  btn.disabled = true; btn.textContent = 'Getting it ready…';
+  const track = currentTrack, grade = currentGrade;
+  // Let the button repaint before the (large) book is laid out.
+  setTimeout(() => {
+    const book = document.getElementById('printBook');
+    book.innerHTML = buildBook(track, grade);
+    document.body.classList.add('book-mode');
+    const original = document.title;
+    document.title = bookName(track, grade);   // the browser offers this as the PDF's file name
+    let done = false;
+    const cleanup = () => {
+      if (done) return; done = true;
+      document.body.classList.remove('book-mode');
+      book.innerHTML = '';
+      document.title = original;
+      btn.disabled = false; btn.textContent = 'Make PDF';
+      closeBookPanel();
+    };
+    window.addEventListener('afterprint', cleanup, { once: true });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      window.print();
+      // Chrome and Safari pause here until the print window closes; Firefox
+      // returns at once and fires afterprint later.
+      setTimeout(() => { if (!/firefox/i.test(navigator.userAgent)) cleanup(); }, 500);
+    }));
+  }, 30);
+}
+
 function printLesson() {
   const item = currentItems[currentIdx];
   if (!item) { window.print(); return; }
@@ -1184,7 +1371,7 @@ _reader.addEventListener('scroll', hidePop, { passive: true });
 pop.addEventListener('mousedown', e => e.preventDefault());   // keep the selection while a button is pressed
 pop.addEventListener('click', onPopClick);
 window.addEventListener('resize', hidePop);
-document.addEventListener('keydown', e => { if (e.key === 'Escape') hidePop(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { hidePop(); const bp = document.getElementById('bookPanel'); if (bp && !bp.hidden) closeBookPanel(); } });
 document.addEventListener('pointerdown', e => { if (!pop.hidden && !pop.contains(e.target)) hidePop(); }, true);
 // Phones and tablets: there is no mouseup at the end of a selection drag, so
 // wait for the selection to settle instead.
