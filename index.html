@@ -54,6 +54,28 @@
     padding: 14px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
   header h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: .01em; text-wrap: balance; }
 
+  /* ── Collapsible top (for split screen) ── */
+  .top-toggle { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,.6); background: rgba(255,255,255,.12); color: #fff;
+    font: 800 .85rem 'Nunito', system-ui, sans-serif; padding: 6px 12px; border-radius: 20px; cursor: pointer;
+    transition: background .15s; }
+  .top-toggle:hover { background: rgba(255,255,255,.26); }
+  .top-toggle svg { transition: transform .2s ease; }
+  .top-toggle:focus-visible, .top-now:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  .top-now { display: none; border: 0; cursor: pointer; color: #fff; background: rgba(255,255,255,.2);
+    font: 800 .88rem 'Nunito', system-ui, sans-serif; padding: 4px 12px; border-radius: 14px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .top-now:hover { background: rgba(255,255,255,.3); }
+  body.top-collapsed header { padding: 6px 12px; gap: 10px; flex-wrap: nowrap; }
+  body.top-collapsed header > svg { width: 20px; height: 20px; flex-shrink: 0; }
+  body.top-collapsed header h1 { font-size: 1rem; white-space: nowrap; }
+  body.top-collapsed .track-switch, body.top-collapsed .grade-bar, body.top-collapsed .book-panel { display: none !important; }
+  body.top-collapsed .top-now { display: inline-block; margin-left: auto; }
+  body.top-collapsed .top-toggle { padding: 4px 10px; }
+  body.top-collapsed .top-toggle svg { transform: rotate(180deg); }
+  body.top-collapsed .notes-panel { max-height: calc(100vh - 110px); max-height: calc(100dvh - 110px); }
+  @media (max-width: 420px) { body.top-collapsed header h1 { display: none; } }
+
   /* ── Track switch (Primer / Hole-filling) ── */
   .track-switch { margin-left: auto; display: inline-flex; background: rgba(255,255,255,.18); border-radius: 24px; padding: 3px; gap: 2px; }
   .track-btn { border: none; background: transparent; color: white; font-family: inherit; font-weight: 800;
@@ -386,9 +408,11 @@
     <button class="track-btn active" id="trackPrimer" role="tab" onclick="selectTrack('primer')">Primer</button>
     <button class="track-btn" id="trackHf" role="tab" onclick="selectTrack('hf')">Hole-filling</button>
   </div>
+  <button type="button" class="top-now" id="topNow" onclick="toggleTop(false)" title="Show the grade buttons"></button>
+  <button type="button" class="top-toggle" id="topToggle" aria-expanded="true" aria-controls="gradeBarWrap" onclick="toggleTop()" title="Hide the grade buttons to make more room for the text"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg><span>Hide grades</span></button>
 </header>
 
-<div class="grade-bar">
+<div class="grade-bar" id="gradeBarWrap">
   <span class="grade-bar-label">My Grade:</span>
   <span id="gradeBar" style="display:flex;gap:10px;flex-wrap:wrap;"></span>
   <button type="button" class="tool-btn book-btn" id="bookBtn" onclick="openBookPanel()" hidden></button>
@@ -498,6 +522,22 @@ function parseText(raw) {
   return { textLabel, title, author, body, instruction };
 }
 
+// ── Collapsible top bar ─────────────────────────────────────────────────
+function toggleTop(force) {
+  const c = typeof force === 'boolean' ? force : !document.body.classList.contains('top-collapsed');
+  document.body.classList.toggle('top-collapsed', c);
+  const b = document.getElementById('topToggle');
+  b.setAttribute('aria-expanded', String(!c));
+  b.querySelector('span').textContent = c ? 'Show grades' : 'Hide grades';
+  b.title = c ? 'Show the grade buttons' : 'Hide the grade buttons to make more room for the text';
+  try { localStorage.setItem('rt-top', c ? '1' : '0'); } catch (e) {}
+  if (typeof hidePop === 'function' && pop) hidePop();
+}
+function updateTopNow() {
+  const el = document.getElementById('topNow');
+  if (el) el.textContent = currentGrade ? `Grade ${currentGrade} · ${TRACK_LABEL[currentTrack]}` : TRACK_LABEL[currentTrack];
+}
+
 // ── Grades & tracks ─────────────────────────────────────────────────────
 function renderGrades() {
   const bar = document.getElementById('gradeBar');
@@ -512,6 +552,7 @@ function renderGrades() {
     bar.appendChild(btn);
   });
   updateBookBtn();
+  updateTopNow();
   const bp = document.getElementById('bookPanel');
   if (bp && !bp.hidden) closeBookPanel();
 }
@@ -1395,6 +1436,9 @@ document.addEventListener('selectionchange', () => {
   note.style.display = TRACK_NOTE[t] ? '' : 'none';
   if (!g || !DATA()[g]) g = Object.keys(DATA())[0];
   selectGrade(g);
+  let top = '0';
+  try { top = localStorage.getItem('rt-top') || '0'; } catch (e) {}
+  if (top === '1') toggleTop(true);
 })();
 </script>
 </body>
