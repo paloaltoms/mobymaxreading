@@ -96,6 +96,36 @@
   .grade-btn.active { background: var(--accent); color: white; }
   .grade-btn:disabled { opacity: .35; cursor: not-allowed; border-color: var(--ghost); color: var(--ghost); }
 
+
+  /* ── Words panel (reading question vocabulary) ── */
+  .words-wrap { max-width: 1004px; }
+  .wd-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .wd-head h2 { font-size: 1.6rem; font-weight: 800; color: var(--ink); }
+  .wd-sub { color: var(--muted); font-weight: 600; font-size: .95rem; margin-bottom: 14px; }
+  .wd-find { width: 100%; max-width: 360px; padding: 9px 14px; border-radius: 24px; border: 2px solid var(--line-2);
+    background: var(--paper); color: var(--ink); font: 700 1rem 'Nunito', system-ui, sans-serif; }
+  .wd-find:focus { outline: 3px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .wd-sec { display: inline-block; font-weight: 800; font-size: .95rem; background: var(--tint); color: var(--accent-text);
+    padding: 5px 14px; border-radius: 20px; margin: 24px 0 10px; }
+  .wd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; }
+  .wd-card { background: var(--paper); border: 2px solid var(--line); border-radius: 16px; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 8px var(--shadow); }
+  .wd-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .wd-word { font-size: 1.35rem; font-weight: 800; color: var(--accent-deep); line-height: 1.2; }
+  .wd-mean { font-size: 1.05rem; line-height: 1.45; color: var(--ink); }
+  .wd-ex { font-size: .95rem; font-style: italic; color: var(--muted); background: var(--tint-3); border-radius: 10px; padding: 8px 10px; line-height: 1.4; }
+  .wd-say { flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--accent); background: var(--paper);
+    color: var(--accent); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background .15s; }
+  .wd-say:hover { background: var(--tint); }
+  .wd-say:focus-visible, .wd-back:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .wd-say svg { stroke: currentColor; }
+  .words-wrap.no-speech .wd-say { display: none; }
+  .wd-before { background: var(--tint); border: 2px solid var(--line-2); border-radius: 16px; padding: 14px 18px; margin-bottom: 4px; }
+  .wd-before .wd-top { margin-bottom: 6px; }
+  .wd-before ol { margin-left: 1.3em; font-size: 1.08rem; line-height: 1.6; font-weight: 700; color: var(--ink); }
+  .wd-none { color: var(--muted); font-weight: 600; padding: 18px 0; }
+  @media print { .words-wrap { display: none !important; } }
+
   /* ── Underlining ── */
   .tool-btn { flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
     padding: 9px 16px; border-radius: 24px; border: 2px solid var(--accent); background: var(--paper);
@@ -415,6 +445,7 @@
 <div class="grade-bar" id="gradeBarWrap">
   <span class="grade-bar-label">My Grade:</span>
   <span id="gradeBar" style="display:flex;gap:10px;flex-wrap:wrap;"></span>
+  <button type="button" class="tool-btn" id="wordsBtn" onclick="toggleWords()" title="Keywords that show up in reading questions, with what they mean" aria-pressed="false"><span aria-hidden="true" style="font-weight:800">Aa</span>Keywords</button>
   <button type="button" class="tool-btn book-btn" id="bookBtn" onclick="openBookPanel()" hidden></button>
   <span class="search-wrap">
     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
@@ -558,6 +589,7 @@ function renderGrades() {
 }
 
 function emptyReader(msg) {
+  setWordsOn(false);
   document.getElementById('reader').innerHTML = `
     <div class="reader-empty">
       <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".5" aria-hidden="true">
@@ -780,6 +812,142 @@ function renderList() {
       el.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectLesson(flatIdx); } };
     }
     list.appendChild(el);
+  });
+}
+
+
+// ── Words panel: vocabulary used in reading questions ───────────────────
+const WORD_SECTIONS = [
+  { name: 'Question words', words: [
+    { w: 'detail', m: 'A small fact the story tells you.', q: 'Which detail tells where Sam went?' },
+    { w: 'evidence', m: 'A clue from the story that proves your answer.', q: 'Which sentence is the best evidence?' },
+    { w: 'supports', m: 'Backs up or helps prove. A detail that supports an idea shows the idea is true.', q: 'Which detail supports the conclusion that Max is tired?' },
+    { w: 'infer', alt: 'inference infers', m: 'To figure something out using clues from the story plus what you already know. What you figure out is called an inference.', q: 'What can you infer about how Mia feels?' },
+    { w: 'conclusion', m: 'Something you figure out after you put the clues together.', q: 'What conclusion can you draw from the story?' },
+    { w: 'interpret', m: 'To explain what something means in your own words.', q: 'How can you interpret the character\u2019s actions?' },
+    { w: 'prediction', alt: 'predict', m: 'What you think will happen next, using clues.', q: 'What will most likely happen next?' },
+    { w: 'main idea', m: 'What the whole story is mostly about.', q: 'What is the main idea of the passage?' },
+  ]},
+  { name: 'Parts of a story', words: [
+    { w: 'character', m: 'A person or animal in the story.', q: 'How does the character feel at the end?' },
+    { w: 'setting', m: 'Where and when the story happens.', q: 'What is the setting of the story?' },
+    { w: 'problem and solution', alt: 'problem solution', m: 'The problem is what goes wrong. The solution is how it gets fixed.', q: 'How does the character solve the problem?' },
+    { w: 'sequence', alt: 'order first next last', m: 'The order things happen: first, next, then, last.', q: 'What happens first in the story?' },
+    { w: 'theme', alt: 'lesson message', m: 'The big lesson or message of the story.', q: 'What is the theme of the story?' },
+    { w: 'point of view', alt: 'narrator', m: 'Who is telling the story.', q: 'Who is telling this story?' },
+  ]},
+  { name: 'Thinking skills', words: [
+    { w: 'cause and effect', alt: 'cause effect', m: 'The cause is why something happened. The effect is what happened.', q: 'What caused the dog to bark?' },
+    { w: 'compare and contrast', alt: 'compare contrast same different', m: 'Compare means how things are the same. Contrast means how they are different.', q: 'How are the two characters different?' },
+    { w: 'context clues', alt: 'context clue', m: 'Hints in the nearby words that help you figure out a new word.', q: 'What does the word \u201cgloomy\u201d mean in this sentence?' },
+    { w: 'author\u2019s purpose', alt: 'authors purpose author', m: 'Why the author wrote it: to teach, to tell a story, or to make you laugh.', q: 'Why did the author write this passage?' },
+    { w: 'summarize', alt: 'summary', m: 'Tell the most important parts in just a few words.', q: 'Which sentence best summarizes the passage?' },
+    { w: 'fact and opinion', alt: 'fact opinion', m: 'A fact can be proven true. An opinion is what someone thinks or feels.', q: 'Which sentence is an opinion?' },
+    { w: 'synonym and antonym', alt: 'synonym antonym', m: 'A synonym means almost the same thing. An antonym means the opposite.', q: 'Which word is a synonym for \u201clarge\u201d?' },
+  ]},
+  { name: 'Kinds of writing', words: [
+    { w: 'fiction', m: 'A made-up story.', q: 'Is this passage fiction or nonfiction?' },
+    { w: 'nonfiction', m: 'Writing about real facts and true things.', q: 'Which detail shows this is nonfiction?' },
+    { w: 'biography', m: 'A true story about a real person\u2019s life, written by someone else.', q: 'What is this biography mostly about?' },
+    { w: 'autobiography', m: 'A true story about a person\u2019s own life, written by that person.', q: 'How is an autobiography different from a biography?' },
+    { w: 'genre', m: 'The kind of writing, like a fable, a poem, or a biography.', q: 'What genre is this passage?' },
+    { w: 'text feature', alt: 'heading caption title glossary', m: 'Something that helps you find information, like a title, a heading, a picture, or a caption.', q: 'Which text feature would help you find the meaning of a word?' },
+  ]},
+  { name: 'Directions', words: [
+    { w: 'passage', m: 'The story or article you read.', q: 'Read the passage. Then answer the questions.' },
+    { w: 'paragraph', m: 'A group of sentences about one idea.', q: 'Read the first paragraph. What is it about?' },
+    { w: 'reread', alt: 'read again', m: 'Read it again to look for clues.', q: 'Reread the paragraph. Then answer.' },
+    { w: 'according to the text', m: 'Use what the story says, not what you remember or guess.', q: 'According to the text, why was Ben late?' },
+    { w: 'best answer', alt: 'choose select', m: 'The choice that fits the story the most. More than one answer can sound right, so check each one.', q: 'Choose the best answer.' },
+    { w: 'not and except', alt: 'not except', m: 'Find the one answer that does not fit or is not in the story.', q: 'Which detail is NOT in the story?' },
+  ]},
+];
+const WORDS_BEFORE = ['Listen to the question. Make sure you know what it is asking.', 'Read every answer choice.', 'Pick the best answer, then check the story for proof.'];
+const WORDS_SPEAKER = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+let _wordsBackIdx = null;
+
+function setWordsOn(on) {
+  const b = document.getElementById('wordsBtn');
+  if (!b) return;
+  b.classList.toggle('on', !!on);
+  b.setAttribute('aria-pressed', String(!!on));
+}
+function toggleWords() {
+  if (document.getElementById('wordsView')) closeWords(); else showWords();
+}
+function closeWords() {
+  const back = _wordsBackIdx;
+  _wordsBackIdx = null;
+  if (typeof stopSpeaking === 'function') stopSpeaking();
+  if (back != null && currentItems[back]) selectLesson(back);
+  else emptyReader(currentTrack === 'hf'
+    ? 'Pick a lesson from the list! The lesson names match the ones in your Timeback course.'
+    : 'Pick a story from the list!');
+}
+function stopSpeaking() { try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {} }
+function speakWordText(t) {
+  if (!('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = 'en-US'; u.rate = 0.9;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+function wordCard(x) {
+  const say = x.w + '. ' + x.m;
+  const hay = (x.w + ' ' + (x.alt || '') + ' ' + x.m).toLowerCase();
+  return `<div class="wd-card" data-q="${esc(hay)}">
+    <div class="wd-top"><span class="wd-word">${esc(x.w)}</span>
+      <button type="button" class="wd-say" data-say="${esc(say)}" aria-label="Hear ${esc(x.w)}" title="Hear this word">${WORDS_SPEAKER}</button></div>
+    <p class="wd-mean">${esc(x.m)}</p>
+    <p class="wd-ex">${esc(x.q)}</p>
+  </div>`;
+}
+function filterWords(v) {
+  const q = (v || '').trim().toLowerCase();
+  let any = false;
+  document.querySelectorAll('#wordsView .wd-block').forEach(sec => {
+    let n = 0;
+    sec.querySelectorAll('.wd-card').forEach(c => {
+      const show = !q || c.dataset.q.includes(q);
+      c.hidden = !show;
+      if (show) n++;
+    });
+    sec.hidden = !n;
+    if (n) any = true;
+  });
+  const none = document.getElementById('wdNone');
+  if (none) none.hidden = any;
+}
+function showWords() {
+  _wordsBackIdx = currentIdx;
+  currentIdx = null;
+  if (typeof hidePop === 'function' && pop) hidePop();
+  renderList();
+  setWordsOn(true);
+  const beforeSay = 'Before you answer. ' + WORDS_BEFORE.map((s, i) => (i + 1) + '. ' + s).join(' ');
+  const reader = document.getElementById('reader');
+  reader.innerHTML = `<div class="words-wrap${'speechSynthesis' in window ? '' : ' no-speech'}" id="wordsView">
+    <div class="wd-head">
+      <h2>Keywords I will see</h2>
+      <button type="button" class="tool-btn wd-back" onclick="closeWords()">Back to stories</button>
+    </div>
+    <p class="wd-sub">These keywords show up in reading questions. Tap the speaker to hear a word and what it means.</p>
+    <input class="wd-find" type="search" autocomplete="off" placeholder="Find a word\u2026" aria-label="Find a word" oninput="filterWords(this.value)">
+    <div class="wd-before" style="margin-top:16px">
+      <div class="wd-top"><span class="wd-word">Before you answer</span>
+        <button type="button" class="wd-say" data-say="${esc(beforeSay)}" aria-label="Hear the steps" title="Hear the steps">${WORDS_SPEAKER}</button></div>
+      <ol>${WORDS_BEFORE.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+    </div>
+    ${WORD_SECTIONS.map(s => `<div class="wd-block"><div class="wd-sec">${esc(s.name)}</div><div class="wd-grid">${s.words.map(wordCard).join('')}</div></div>`).join('')}
+    <p class="wd-none" id="wdNone" hidden>No word matches that. Try part of a word.</p>
+  </div>`;
+  reader.scrollTop = 0;
+  const view = document.getElementById('wordsView');
+  view.addEventListener('click', e => {
+    const b = e.target.closest ? e.target.closest('.wd-say') : null;
+    if (b) speakWordText(b.dataset.say);
   });
 }
 
@@ -1210,6 +1378,8 @@ function renderTextBlock(raw, blockLabel) {
 }
 
 function selectLesson(flatIdx) {
+  setWordsOn(false);
+  _wordsBackIdx = null;
   currentIdx = flatIdx;
   renderList();
   hidePop();
